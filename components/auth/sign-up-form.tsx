@@ -1,6 +1,7 @@
 "use client";
 
 import { z } from "zod";
+import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -14,7 +15,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { signUp } from "@/app/(auth)/authenticate/auth.action";
+import { useRouter } from "next/navigation";
 
 export const signUpSchema = z
   .object({
@@ -36,6 +38,8 @@ export const signUpSchema = z
   });
 
 const SignUpForm = () => {
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof signUpSchema>>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -47,11 +51,21 @@ const SignUpForm = () => {
   });
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof signUpSchema>) {
+  const onSubmit = async (values: z.infer<typeof signUpSchema>) => {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
     console.log(values);
-  }
+    const response = await signUp(values);
+    if (response.error) {
+      toast.error(response.error);
+      return;
+    }
+    toast.success("Account created successfully!");
+    // Reset the form values.
+    form.reset();
+    // Navigate to the dashboard page.
+    router.push("/dashboard");
+  };
 
   return (
     <Card>

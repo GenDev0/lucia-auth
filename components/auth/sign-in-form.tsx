@@ -22,6 +22,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { signIn } from "@/app/(auth)/authenticate/auth.action";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export const signInSchema = z.object({
   email: z.string().email(),
@@ -29,6 +32,7 @@ export const signInSchema = z.object({
 });
 
 const SignInForm = () => {
+  const router = useRouter();
   const form = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -38,11 +42,20 @@ const SignInForm = () => {
   });
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof signInSchema>) {
+  const onSubmit = async (values: z.infer<typeof signInSchema>) => {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    console.log(values);
-  }
+    const response = await signIn(values);
+    if (response?.error) {
+      toast.error(response.error);
+      return;
+    }
+    toast.success("Signed in successfully!");
+    // Reset the form values.
+    form.reset();
+    // Navigate to the dashboard page.
+    router.push("/dashboard");
+  };
 
   return (
     <Card>
